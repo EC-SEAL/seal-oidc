@@ -77,6 +77,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	        updateSessionData(sessionId, "spRequest", spRequestAttrSetStr);
 	        updateSessionData(sessionId, "spMetadata", spMetadataStr);
 	        updateSessionData(sessionId, "spDetails", spDetailsAttrSetStr);
+	        // TODO: here
 	        if (context.getRealm().getName().toLowerCase().equals(esmoNoRealm.toLowerCase())) {
 	        	LOG.info("we are the norwegian realm, set sp_origin accordingly");
 	        	updateSessionData(sessionId, "SP_ORIGIN", "NO");
@@ -107,7 +108,8 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
         	LOG.info("spMetadata: " + spMetadataStr);
 			LOG.info("spDetails: " + spDetailsAttrSetStr);
 	        LOG.info("started NEW sessionId: " + sessionId);
-	        LOG.info("generated token: " + token);
+			// TODO: here
+			LOG.info("generated token: " + token);
         } catch (NoSuchAlgorithmException | IOException | KeyStoreException e) {
         	StringWriter sw = new StringWriter();
         	PrintWriter pw = new PrintWriter(sw);
