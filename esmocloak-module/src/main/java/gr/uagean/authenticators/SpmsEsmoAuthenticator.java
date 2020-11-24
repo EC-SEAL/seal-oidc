@@ -69,7 +69,37 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
         	String spMetadataStr = mapper.writeValueAsString(spMetadata);
         	AttributeSet spDetailsAttrSet = prepareSpDetails(context);
         	String spDetailsAttrSetStr = mapper.writeValueAsString(spDetailsAttrSet);
-        	
+
+			// Check the realm that was accessed //TODO
+			// To avoid having to use a specific realm name, "query" endpoint mode is the default and
+			// I pass the realm name to mark the "auth" endpoint mode as state variables.
+			RealmModel realm = authSession.getRealm();
+			String authEP = paramServ.getParam("SEAL_AUTH_REALM");
+			if(authEP == null || authEP.isEmpty())
+				authEP = "auth"; // Default if param not set
+			String spRequestEP = "query";
+			if(realm.getName().toLowerCase().equals(authEP.toLowerCase()))
+				spRequestEP = "auth";
+
+			//Get the Source from a scope (if any).
+			// Scopes, as other providers do, will have a fixed prefix 'sealproject:' and the suffix will be the
+			// source name. Example: "sealproject:eIDAS" //TODO
+			String spRequestSource = "";
+			for (String scope: authSession.getClientScopes()) {
+				String[] scopeParts = scope.split(":", 1);
+				if(scopeParts.length != 2)
+					continue;
+				if(scopeParts[0] == null)
+					continue;
+				if(scopeParts[1] == null)
+					continue;
+				if(scopeParts[0].toLowerCase().equals("sealproject")) {
+					spRequestSource = scopeParts[1]; //No lower, as RM might be testing it as is
+					break;
+				}
+			}
+
+
 	        // Start Session
 	        resp = mapper.readValue(netServ.sendPostForm(smUrl, "/sm/startSession", postParams), SessionMngrResponse.class);
 	        String sessionId = resp.getSessionData().getSessionId();
@@ -77,7 +107,13 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	        updateSessionData(sessionId, "spRequest", spRequestAttrSetStr);
 	        updateSessionData(sessionId, "spMetadata", spMetadataStr);
 	        updateSessionData(sessionId, "spDetails", spDetailsAttrSetStr);
-	        // TODO: here
+	        // Write the new session variables  //TODO
+			updateSessionData(sessionId, "spRequestEP", spRequestEP);
+			updateSessionData(sessionId, "spRequestSource", spRequestSource);
+
+			// TODO: seguir
+			// - Change the urls, certs, etc that pointed to the ACS, now they must point to the RM
+
 	        if (context.getRealm().getName().toLowerCase().equals(esmoNoRealm.toLowerCase())) {
 	        	LOG.info("we are the norwegian realm, set sp_origin accordingly");
 	        	updateSessionData(sessionId, "SP_ORIGIN", "NO");
@@ -107,8 +143,9 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	        LOG.info("spRequest: " + spRequestAttrSetStr);
         	LOG.info("spMetadata: " + spMetadataStr);
 			LOG.info("spDetails: " + spDetailsAttrSetStr);
+			LOG.info("spRequestEP: " + spRequestEP);
+			LOG.info("spRequestSource: " + spRequestSource);
 	        LOG.info("started NEW sessionId: " + sessionId);
-			// TODO: here
 			LOG.info("generated token: " + token);
         } catch (NoSuchAlgorithmException | IOException | KeyStoreException e) {
         	StringWriter sw = new StringWriter();
