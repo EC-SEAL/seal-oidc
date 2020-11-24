@@ -111,9 +111,6 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 			updateSessionData(sessionId, "spRequestEP", spRequestEP);
 			updateSessionData(sessionId, "spRequestSource", spRequestSource);
 
-			// TODO: seguir
-			// - Change the urls, certs, etc that pointed to the ACS, now they must point to the RM
-
 	        if (context.getRealm().getName().toLowerCase().equals(esmoNoRealm.toLowerCase())) {
 	        	LOG.info("we are the norwegian realm, set sp_origin accordingly");
 	        	updateSessionData(sessionId, "SP_ORIGIN", "NO");
@@ -133,7 +130,10 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	        
 	        // set auth note so that the theme can pick it up from here and post-redirect user-agent properly
 	        String acmUrl = paramServ.getParam("ACM_URL");
-	        String uri = "/acm/request";
+	        String uri = "/acm/request"; //The value used in ESMO, we leave it as default //TODO
+			String customUri = paramServ.getParam("ACM_URI");
+			if(customUri != null && !customUri.isEmpty())
+				uri = customUri;
 	        authSession.setAuthNote(ACMREQUEST_SUCCESS_NOTE, "true");
 	        authSession.setAuthNote(ACMREQUEST_URL_NOTE, acmUrl);
 	        authSession.setAuthNote(ACMREQUEST_URI_NOTE, uri);
@@ -145,6 +145,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 			LOG.info("spDetails: " + spDetailsAttrSetStr);
 			LOG.info("spRequestEP: " + spRequestEP);
 			LOG.info("spRequestSource: " + spRequestSource);
+			LOG.info("uri being accessed: " + uri);
 	        LOG.info("started NEW sessionId: " + sessionId);
 			LOG.info("generated token: " + token);
         } catch (NoSuchAlgorithmException | IOException | KeyStoreException e) {
