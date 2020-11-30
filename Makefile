@@ -1,5 +1,5 @@
-NAME = djart/esmocloak
-VERSION = 0.0.43
+NAME = faragom/sealoidc
+VERSION = 0.0.44
 
 .PHONY: all build
 
