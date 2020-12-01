@@ -7,10 +7,7 @@ import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.jboss.logging.Logger;
@@ -85,8 +82,15 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 			// Scopes, as other providers do, will have a fixed prefix 'sealproject:' and the suffix will be the
 			// source name. Example: "sealproject:eIDAS" //TODO
 			String spRequestSource = "";
-			for (String scope: authSession.getClientScopes()) {
-				String[] scopeParts = scope.split(":", 1);
+			//LOG.info("***existing scopes: " + Arrays.toString(authSession.getClientScopes().toArray()));
+			String scopeParam = context.getHttpRequest().getUri().getQueryParameters().getFirst(OAuth2Constants.SCOPE);
+			String[] scopesArray = scopeParam.split(" ");
+			LOG.info("***existing scopes: " + Arrays.toString(scopesArray));
+			//for (String scope: authSession.getClientScopes()) {
+			for (String scope: scopesArray) {
+				LOG.info("***checking scope: " + scope);
+				String[] scopeParts = scope.split(":", 2);
+				LOG.info("***split: " + Arrays.toString(scopeParts));
 				if(scopeParts.length != 2)
 					continue;
 				if(scopeParts[0] == null)
@@ -94,6 +98,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 				if(scopeParts[1] == null)
 					continue;
 				if(scopeParts[0].toLowerCase().equals("sealproject")) {
+					LOG.info("*** matched 'sealproject'.");
 					spRequestSource = scopeParts[1]; //No lower, as RM might be testing it as is
 					break;
 				}

@@ -1,0 +1,17 @@
+{
+  "msId": "SPms001",
+  "authorisedMicroservices": [
+    "ACMms001",
+    "RMms001",
+    "SMms001"
+  ],
+  "rsaPublicKeyBinary": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCi7jZVwQFxQ2SY4lxjr05IexolQJJobwYzrvE5pk7AcQpG46kuJBzD8ziiqFFCGSNZ07cLWys+b5JmJ6kU44lKLVeGbEpgaO0OTBDLMk2fi5U83T8dezgWgaPFiy/N3sHPpcW2Y3ZePo0UbM7MLzv14TR+jxTOyrmwWwGwDJsz+wIDAQAB",
+  "publishedAPI": [
+    {
+      "apiClass": "SP",
+      "apiCall": "handleResponse",
+      "apiConnectionType": "post",
+      "apiEndpoint": "https://esmo.uji.es:8180/sp/response"
+    }
+  ]
+}
