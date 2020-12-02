@@ -11,7 +11,7 @@
       "apiClass": "SP",
       "apiCall": "handleResponse",
       "apiConnectionType": "post",
-      "apiEndpoint": "https://esmo.uji.es:8180/sp/response"
+      "apiEndpoint": "https://esmo.uji.es:8180/auth/realms/seal/sp/response"
     }
   ]
 }

@@ -8,7 +8,9 @@ services:
   postgres:
     image: postgres:9.6
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      # If the path does not exist, the volume is not created and the database
+      # will be volatile (will exist only while the container exists)
+      - postgres_data:/var/lib/postgresql/data3
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -62,7 +64,8 @@ services:
       ESMO_SP_LOCATION: Greece
       ESMO_SP_PROTOCOL: OIDC
       ESMO_EXPOSE_URL: /sp/response
-      ESMO_SP_OIDC_AUTH_ENDPOINT: http://esmo.uji.es:8180/auth/realms/esmo/protocol/openid-connect/auth
+      #https://domain:port/auth/realms/seal/sp/response
+      ESMO_SP_OIDC_AUTH_ENDPOINT: http://esmo.uji.es:8180/auth/realms/seal/protocol/openid-connect/auth
       EIDAS_SP_OIDC_AUTH_ENDPOINT: http://esmo.uji.es:8180/auth/realms/eidas/protocol/openid-connect/auth
       ESMONO_SP_OIDC_AUTH_ENDPOINT: http://esmo.uji.es:8180/auth/realms/esmoNo/protocol/openid-connect/auth
       ESMONOPROD_SP_OIDC_AUTH_ENDPOINT: http://esmo.uji.es:8180/auth/realms/esmoNoProd/protocol/openid-connect/auth

@@ -70,6 +70,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 			// Check the realm that was accessed //TODO
 			// To avoid having to use a specific realm name, "query" endpoint mode is the default and
 			// I pass the realm name to mark the "auth" endpoint mode as state variables.
+			/*
 			RealmModel realm = authSession.getRealm();
 			String authEP = paramServ.getParam("SEAL_AUTH_REALM");
 			if(authEP == null || authEP.isEmpty())
@@ -77,11 +78,14 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 			String spRequestEP = "query";
 			if(realm.getName().toLowerCase().equals(authEP.toLowerCase()))
 				spRequestEP = "auth";
+			*/
 
 			//Get the Source from a scope (if any).
 			// Scopes, as other providers do, will have a fixed prefix 'sealproject:' and the suffix will be the
 			// source name. Example: "sealproject:eIDAS" //TODO
 			String spRequestSource = "";
+			String spRequestEP = "query";
+			String authEP = paramServ.getParam("SEAL_AUTH_REALM");
 			//LOG.info("***existing scopes: " + Arrays.toString(authSession.getClientScopes().toArray()));
 			String scopeParam = context.getHttpRequest().getUri().getQueryParameters().getFirst(OAuth2Constants.SCOPE);
 			String[] scopesArray = scopeParam.split(" ");
@@ -97,10 +101,13 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 					continue;
 				if(scopeParts[1] == null)
 					continue;
-				if(scopeParts[0].toLowerCase().equals("sealproject")) {
+				if(scopeParts[0].toLowerCase().equals("sealprojectsrc")) {
 					LOG.info("*** matched 'sealproject'.");
 					spRequestSource = scopeParts[1]; //No lower, as RM might be testing it as is
-					break;
+				}
+				if(scopeParts[0].toLowerCase().equals("sealprojectep")){
+					if(scopeParts[1].toLowerCase().equals(authEP.toLowerCase()))
+						spRequestEP = "auth";
 				}
 			}
 
