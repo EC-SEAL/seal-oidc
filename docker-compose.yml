@@ -48,6 +48,8 @@ services:
       ACM_URL: https://vm.project-seal.eu:9063
       ACM_URI: /rm/request
       SEAL_AUTH_REALM: auth
+      ATTRIBUTES_FILE: /resources/attributes.json
+      ID_ATTRIBUTES: schacPersonalUniqueID,schacPersonalUniqueCode,eduPersonTargetedID,eduPersonPrincipalName
       #SESSION_MANAGER_URL: http://5.79.83.118:8090
       SESSION_MANAGER_URL: http://vm.project-seal.eu:9090
       CONFIGURATION_MANAGER_URL: https://vm.project-seal.eu:9083

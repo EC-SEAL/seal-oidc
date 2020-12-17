@@ -9,6 +9,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
+import gr.uagean.loginWebApp.model.pojo.*;
 import org.apache.commons.httpclient.NameValuePair;
 import org.jboss.logging.Logger;
 import org.keycloak.OAuth2Constants;
@@ -23,18 +24,6 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import gr.uagean.loginWebApp.model.enums.TypeEnum;
-import gr.uagean.loginWebApp.model.pojo.AttributeSet;
-import gr.uagean.loginWebApp.model.pojo.AttributeType;
-import gr.uagean.loginWebApp.model.pojo.EduOrgConstants;
-import gr.uagean.loginWebApp.model.pojo.EduPersonConstants;
-import gr.uagean.loginWebApp.model.pojo.EidasConstants;
-import gr.uagean.loginWebApp.model.pojo.EndpointType;
-import gr.uagean.loginWebApp.model.pojo.EntityMetadata;
-import gr.uagean.loginWebApp.model.pojo.EsmoSecurityUsage;
-import gr.uagean.loginWebApp.model.pojo.SchacConstants;
-import gr.uagean.loginWebApp.model.pojo.SecurityKeyType;
-import gr.uagean.loginWebApp.model.pojo.SessionMngrResponse;
-import gr.uagean.loginWebApp.model.pojo.UpdateDataRequest;
 
 public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	
@@ -47,8 +36,9 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	protected String esmoNoProdRealm;
 	protected SessionMngrResponse resp;
 	protected UpdateDataRequest updateDR = new UpdateDataRequest();
-	
-    @Override
+	private AttributeNameList acceptedAttributes;
+
+	@Override
     public void authenticateImpl(AuthenticationFlowContext context) {
         AuthenticationSessionModel authSession = context.getAuthenticationSession();
         
@@ -58,14 +48,19 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
         	esmoNoRealm = paramServ.getParam("ESMO_NO_REALM");
         	esmoNoProdRealm = paramServ.getParam("ESMO_NO_PROD_REALM");
         	List<NameValuePair> postParams = new ArrayList<NameValuePair>();
-        	
-        	// Prepare Data Payload
+
+			this.acceptedAttributes = new AttributeNameList();
+			this.acceptedAttributes.fromJsonFile(paramServ.getParam("ATTRIBUTES_FILE"));
+
+
+			// Prepare Data Payload
         	AttributeSet spRequestAttrSet = prepareSpRequest(context);
         	String spRequestAttrSetStr = mapper.writeValueAsString(spRequestAttrSet);
         	EntityMetadata spMetadata = prepareSpMetadata();
         	String spMetadataStr = mapper.writeValueAsString(spMetadata);
         	AttributeSet spDetailsAttrSet = prepareSpDetails(context);
         	String spDetailsAttrSetStr = mapper.writeValueAsString(spDetailsAttrSet);
+
 
 			// Check the realm that was accessed //TODO
 			// To avoid having to use a specific realm name, "query" endpoint mode is the default and
@@ -200,9 +195,27 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 	}
     
     protected AttributeType[] prepareAllTypes() {
-    	AttributeType[] attrType = new AttributeType[27];
+		List<AttributeNameType> allAttributes = this.acceptedAttributes.getAttributes();
+
+		AttributeType[] attrType = new AttributeType[allAttributes.size()];
         String[] values = new String[1];
-        
+
+		int count = 0;
+		for(AttributeNameType attName: allAttributes) {
+			AttributeType att = new AttributeType(
+					attName.getName(),
+					attName.getFriendlyName(),
+					"UTF-8",
+					"en",
+					true, values
+			);
+
+			attrType[count] = att;
+			count++;
+		}
+
+		// TODO:
+        /*
         // EIDAS
         AttributeType att0 = new AttributeType(EidasConstants.FAMILY_NAME,   EidasConstants.FAMILY_NAME_FRIENDLY,   "UTF-8", "en", true, values);
         AttributeType att1 = new AttributeType(EidasConstants.FIRST_NAME,    EidasConstants.FIRST_NAME_FRIENDLY,    "UTF-8", "en", true, values);
@@ -265,6 +278,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
         attrType[24] = att24;
         attrType[25] = att25;
         attrType[26] = att26;
+        */
         
         return attrType;
     }
@@ -277,7 +291,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
     	for (String claim : claims.split(",")) {
     		claim = claim.trim();
     		
-    		String attName = resolveAttName(claim);
+    		String attName = resolveAttName(claim); // TODO:
     		String attFriendlyName = resolveAttFriendlyName(claim);
     		
     		AttributeType att = new AttributeType(attName, attFriendlyName, "UTF-8", "en", true, values);
@@ -289,9 +303,14 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
     }
     
     protected String resolveAttName(String claim) {
-    	String ret = null; 
-    	
-    	switch (claim) {
+    	//String ret = null;
+		// TODO:
+		AttributeNameType attr = this.acceptedAttributes.find(claim);
+		if(attr != null)
+			return attr.getName();
+		return null;
+		/*
+		switch (claim) {
 	    	case EidasConstants.FAMILY_NAME_SHORT:
 	    		ret = EidasConstants.FAMILY_NAME;
 				break;
@@ -378,12 +397,18 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 		}
     	
     	return ret;
+		*/
     }
     
     protected String resolveAttFriendlyName(String claim) {
-    	String ret = null; 
-    	
-    	switch (claim) {
+    	//String ret = null;
+		// TODO:
+		AttributeNameType attr = this.acceptedAttributes.find(claim);
+		if(attr != null)
+			return attr.getFriendlyName();
+		return null;
+		/*
+		switch (claim) {
 	    	case EidasConstants.FAMILY_NAME_SHORT:
 	    		ret = EidasConstants.FAMILY_NAME_FRIENDLY;
 				break;
@@ -470,6 +495,7 @@ public class SpmsEsmoAuthenticator extends AbstractEsmoAuthenticator {
 		}
     	
     	return ret;
+		*/
     }
 	
 	protected EntityMetadata prepareSpMetadata() throws KeyStoreException, UnsupportedEncodingException {

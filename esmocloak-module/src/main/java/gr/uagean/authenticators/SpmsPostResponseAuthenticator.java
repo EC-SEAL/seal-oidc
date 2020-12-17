@@ -7,10 +7,9 @@ import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
+import gr.uagean.loginWebApp.model.pojo.*;
 import org.apache.commons.httpclient.NameValuePair;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
@@ -23,15 +22,6 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import gr.uagean.loginWebApp.model.pojo.AttributeSet;
-import gr.uagean.loginWebApp.model.pojo.AttributeType;
-import gr.uagean.loginWebApp.model.pojo.EduOrgConstants;
-import gr.uagean.loginWebApp.model.pojo.EduPersonConstants;
-import gr.uagean.loginWebApp.model.pojo.EidasConstants;
-import gr.uagean.loginWebApp.model.pojo.SchacConstants;
-import gr.uagean.loginWebApp.model.pojo.SessionMngrResponse;
-import gr.uagean.loginWebApp.model.pojo.UpdateDataRequest;
-
 public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
 	
 	private static Logger LOG = Logger.getLogger(SpmsPostResponseAuthenticator.class);
@@ -41,7 +31,14 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
 	protected SessionMngrResponse resp;
 	protected UpdateDataRequest updateDR = new UpdateDataRequest();
 	protected List<NameValuePair> getParams = new ArrayList<NameValuePair>();
-	
+
+	//Read attributes
+	protected Map<String, String> attributes = null;
+
+	//Accepted attributes
+	protected AttributeNameList acceptedAttributes = null;
+
+	/*
 	// eidas
 	protected String familyName;
     protected String firstName;
@@ -73,6 +70,7 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
     // schac
     protected String expiryDate;
     protected String homeOrganization;
+    */
 	
     @Override
     public void authenticateImpl(AuthenticationFlowContext context) {
@@ -80,17 +78,33 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
         RealmModel realm = context.getRealm();
         mapper = new ObjectMapper();
         smUrl = paramServ.getParam("SESSION_MANAGER_URL");
-        
+
+        //Load ordered list of identifier attributes // TODO:
+		String[] identifiers = paramServ.getParam("ID_ATTRIBUTES").split(",");
+
         String sessionId = context.getHttpRequest().getUri().getQueryParameters().getFirst("sessionId");
         String claimsvariant = context.getHttpRequest().getUri().getQueryParameters().getFirst("claimsvariant");
-              
+
         try {
-            if (sessionId != null && validateSession(context, sessionId)) {
+			this.attributes = new HashMap<String, String>();
+
+			//Load list of available attributes
+			this.acceptedAttributes = new AttributeNameList();
+			this.acceptedAttributes.fromJsonFile(paramServ.getParam("ATTRIBUTES_FILE"));
+
+
+			if (sessionId != null && validateSession(context, sessionId)) {
             	String realmName = realm.getName();
             	if (claimsvariant != null) {
             		realmName = claimsvariant;
             	}
-            	String username = realmName.concat(".").concat(personIdentifier);
+            	// TODO:
+				// Unlike in ESMO, we cannot guarantee now that the response contains an eIDAS MDS,
+				// so we cannot rely on the personIdentifier being the username. We add a function
+				// to select a candidate username from the possible attributes
+				String idAttribute = this.getIdAttribute(identifiers);
+            	// TODO: add all edugain attributes as variables and try to read them. Then, here try to seek all identifying attributes
+            	String username = realmName.concat(".").concat(idAttribute);
             	String email = username.concat("@").concat(realmName).concat(".gr");
             	
             	UserModel user = KeycloakModelUtils.findUserByNameOrEmail(session, realm, username);
@@ -108,10 +122,18 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
             		}
             	}
         		user.setEnabled(true);
-        		user.setFirstName(firstName);
-        		user.setLastName(familyName);
+        		user.setFirstName("DummyName");
+        		user.setLastName("DummySurname");
         		user.setEmail(email);
         		user.setEmailVerified(true);
+
+				for (Map.Entry<String, String> pair : this.attributes.entrySet()) {
+					String friendlyName = pair.getKey();
+					String value = pair.getValue();
+					user.setSingleAttribute(friendlyName, value);
+					//it.remove(); // avoids a ConcurrentModificationException
+				}
+				/*
         		// eidas
         		LOG.info("filling familyName with: " + familyName);
         		user.setSingleAttribute(EidasConstants.FAMILY_NAME_FRIENDLY, familyName);
@@ -147,7 +169,7 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
         		user.setSingleAttribute(SchacConstants.SCHAC_EXPIRY_DATE_FRIENDLY, expiryDate);
         		LOG.info("filling homeOrganization with: " + homeOrganization);
         		user.setSingleAttribute(SchacConstants.SCHAC_HOME_ORGANIZATION_FRIENDLY, homeOrganization);
-            	
+            	*/
             	context.setUser(user);
                 context.success();
             } else {
@@ -218,7 +240,22 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
     
     protected void processAttributes(AttributeType[] attributes) {
     	for (AttributeType at : attributes) {
-	    	// eidas
+
+    		AttributeNameType attrName = this.acceptedAttributes.find(at.getName());
+			if(attrName == null)
+				attrName =  this.acceptedAttributes.find(at.getFriendlyName());
+
+			//Attribute not found in accepted attributes list
+			if(attrName == null) {
+				LOG.warn("Attribute "+at.getName()+", "+at.getFriendlyName()+"Not in accepted list");
+				continue;
+			}
+
+			//Found. Storing value.
+			this.attributes.put(attrName.getFriendlyName(), at.getValues()[0]);
+
+			/*
+			// eidas
 			if (validateAttributeName(at, EidasConstants.FAMILY_NAME, EidasConstants.FAMILY_NAME_FRIENDLY)) {
 				familyName = at.getValues()[0];
 			} else if (validateAttributeName(at, EidasConstants.FIRST_NAME, EidasConstants.FIRST_NAME_FRIENDLY)) {
@@ -280,10 +317,12 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
 			} else if (validateAttributeName(at, SchacConstants.SCHAC_HOME_ORGANIZATION, SchacConstants.SCHAC_HOME_ORGANIZATION_FRIENDLY)) {
 				homeOrganization = at.getValues()[0];
 			}
+			  */
     	}
-    	LOG.info("unmarshalled personId: " + personIdentifier + ", firstName: " + firstName + ", familyName: " + familyName + ", birth: " + dateOfBirth);
+    	//LOG.info("unmarshalled personId: " + personIdentifier + ", firstName: " + firstName + ", familyName: " + familyName + ", birth: " + dateOfBirth);
     }
-    
+
+    /*
     protected boolean validateAttributeName(AttributeType at, String name, String friendlyName) {
     	if (at.getName() != null 
     			&& at.getName().equals(name)
@@ -300,8 +339,13 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
     	
     	return false;
     }
+    */
     
     protected void nullifyClaims() {
+
+    	if(this.attributes != null)
+    		this.attributes.clear();
+/*
     	// eidas
     	familyName = null;
         firstName = null;
@@ -333,7 +377,20 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
         // schac
         expiryDate = null;
         homeOrganization = null;
+ */
     }
+
+    protected String getIdAttribute(String[] identifiers){
+		String value = null;
+		for (int i = 0; i < identifiers.length; i++) {
+			value = this.attributes.get(identifiers[i]);
+			if (value != null)
+				return value;
+		}
+		// Use a default
+		LOG.warn("Returned assertion didn't have any identifier attribute, using default");
+		return "SEAL_DefaultID";
+	}
 
     @Override
     public void actionImpl(AuthenticationFlowContext context) {
