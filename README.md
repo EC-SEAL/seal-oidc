@@ -2,7 +2,7 @@ This is the implementation of the SEAL specific
 authenticators for Keycloak. It includes all things necessary 
 to build a custom docker image for keycloak and the configuration
 to setup a SEAL SP microservice supporting OIDC and SAML clients
-
+---
 # Build
 This generates a base Keycloak image but including the 
 module that implements the SEAL specific authenticators.
