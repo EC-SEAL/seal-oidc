@@ -43,7 +43,7 @@ docker build -t sealoidc
 
 
 
-#Deploy
+# Deploy
 To deploy the keycloak, you just need to run the included 
 docker-compose file.
 
@@ -162,7 +162,7 @@ docker-compose up -d
 ```
 
 
-#Configure
+# Configure
 Once the service is running, access the admin user interface:
 ```
 https://domain:port/auth/admin/
@@ -205,7 +205,7 @@ For the sake of completeness, we'll explain the configurations that the imported
 
 
 
-#Client registration (OIDC)
+# Client registration (OIDC)
 For every RP/SP we want to authorise to access SEAL, we need to do the following:
 * Go to SEAL realm
 * Go to `Client/Create`
@@ -217,7 +217,7 @@ For every RP/SP we want to authorise to access SEAL, we need to do the following
 * On the Client `Settings`, enable `Authorization Enabled` switch
 * On the `Credentials` tab, you can find the secret you need to configure on the RP.
 
-#Attribute mapping to claims
+# Attribute mapping to claims
 You will need to map the user attributes to claims for each RP/SP you enable.
 * Go to `Clients/<clientID>/Mappers`
 * For each claim the client might ask, `Create` a new Mapper:
