@@ -79,8 +79,18 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
         mapper = new ObjectMapper();
         smUrl = paramServ.getParam("SESSION_MANAGER_URL");
 
-        //Load ordered list of identifier attributes // TODO:
+        //Load ordered list of identifier attributes
 		String[] identifiers = paramServ.getParam("ID_ATTRIBUTES").split(",");
+
+		//Load ordered list of attributes cntaining a name // TODO:
+		String[] nameAttrs = paramServ.getParam("NAME_ATTRIBUTES").split(",");
+
+		//Load ordered list of attributes cntaining a name // TODO:
+		String[] surnameAttrs = paramServ.getParam("SURNAME_ATTRIBUTES").split(",");
+
+		//Load ordered list of attributes cntaining a name // TODO:
+		String[] mailAttrs = paramServ.getParam("MAIL_ATTRIBUTES").split(",");
+
 
         String sessionId = context.getHttpRequest().getUri().getQueryParameters().getFirst("sessionId");
         String claimsvariant = context.getHttpRequest().getUri().getQueryParameters().getFirst("claimsvariant");
@@ -102,11 +112,15 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
 				// Unlike in ESMO, we cannot guarantee now that the response contains an eIDAS MDS,
 				// so we cannot rely on the personIdentifier being the username. We add a function
 				// to select a candidate username from the possible attributes
-				String idAttribute = this.getIdAttribute(identifiers);
+				String idAttribute = this.getCategoryAttributeValue(identifiers);
             	// TODO: add all edugain attributes as variables and try to read them. Then, here try to seek all identifying attributes
-            	String username = realmName.concat(".").concat(idAttribute);
-            	String email = username.concat("@").concat(realmName).concat(".gr");
-            	
+            	//String username = realmName.concat(".").concat(idAttribute);
+				String username = idAttribute;
+            	//String email = username.concat("@").concat(realmName).concat(".gr");
+				String email = this.getCategoryAttributeValue(mailAttrs);
+				String firstName = this.getCategoryAttributeValue(nameAttrs);
+				String surname = this.getCategoryAttributeValue(surnameAttrs);
+
             	UserModel user = KeycloakModelUtils.findUserByNameOrEmail(session, realm, username);
             	if (user == null) {
             		user = session.users().addUser(realm, username);
@@ -122,8 +136,8 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
             		}
             	}
         		user.setEnabled(true);
-        		user.setFirstName("DummyName");
-        		user.setLastName("DummySurname");
+        		user.setFirstName(firstName);
+        		user.setLastName(surname);
         		user.setEmail(email);
         		user.setEmailVerified(true);
 
@@ -380,16 +394,16 @@ public class SpmsPostResponseAuthenticator extends AbstractEsmoAuthenticator {
  */
     }
 
-    protected String getIdAttribute(String[] identifiers){
+    protected String getCategoryAttributeValue(String[] attributeNames){
 		String value = null;
-		for (int i = 0; i < identifiers.length; i++) {
-			value = this.attributes.get(identifiers[i]);
+		for (String attributeName : attributeNames) {
+			value = this.attributes.get(attributeName);
 			if (value != null)
 				return value;
 		}
 		// Use a default
-		LOG.warn("Returned assertion didn't have any identifier attribute, using default");
-		return "SEAL_DefaultID";
+		LOG.warn("Returned assertion didn't have any category attribute, using default");
+		return "SEAL_DefaultValue";
 	}
 
     @Override
