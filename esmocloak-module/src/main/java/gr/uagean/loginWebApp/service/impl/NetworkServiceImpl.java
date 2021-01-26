@@ -33,6 +33,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -127,6 +128,21 @@ public class NetworkServiceImpl implements NetworkService {
 
     @Override
     public String sendGet(String hostUrl, String uri,
+            List<NameValuePair> urlParameters) throws IOException, NoSuchAlgorithmException {
+        int retries = 4;
+        while(retries > 0){
+            try {
+                return this.sendGetOnce(hostUrl, uri, urlParameters);
+            }catch (HttpServerErrorException e) {
+                LOG.error(e.getMessage());
+                LOG.error("HTTP Server error. Retrying connection.");
+                retries--;
+            }
+        }
+        return this.sendGetOnce(hostUrl, uri, urlParameters);
+    }
+
+    public String sendGetOnce(String hostUrl, String uri,
             List<NameValuePair> urlParameters) throws IOException, NoSuchAlgorithmException {
 
         Date date = new Date();
