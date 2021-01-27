@@ -41,7 +41,7 @@
                                  max-height: 55px;float:left;    padding-left: 40.5%;"/>
                         </div>
                         <div class="col s6 m6 l6 " id="header-logo-aegean">
-                            <img id="uAegeanLogo" class="responsive-img" src="${url.resourcesPath}/img/uaegean_logo.png" style="margin-top: 0em;
+                            <img id="uAegeanLogo" class="responsive-img" src="${url.resourcesPath}/img/seal_logo.png" style="margin-top: 0em;
                                  margin-bottom: 1.2em;
                                  max-height: 85px;float:right; margin-right: 20%;"/>
                         </div>
@@ -100,7 +100,7 @@
                         </div>
                         <div class="col s12  m4 footerCol" style="padding-left: 5em;">
                             <p style="margin-top: 0;text-align: justify; color: black;">
-                                The integration of this Service with the ESMO Network has been implemented by<a href="http://www.atlantis-group.gr/" target="_blank"> UAegean | i4m Lab</a>, and funded by the European Commission  (CEF Programme - <a href="http://esmo-project.eu/" target="_blank">ESMO project</a> | Agreement number: INEA/CEF/ICT/A2017/1451951)
+                                <a href="http://project-seal.eu/" target="_blank">SEAL project</a> funded by the European Commission  (CEF Programme. Agreement number: INEA/CEF/ICT/A2018/1633170 Action No: 2018-EU-IA-0024)
                             </p>
                         </div>
                         <div class="col s12  m4 footerCol" style="padding-left: 5em; margin-top: 0.2%;">
