@@ -156,6 +156,14 @@ Here you can define which of those attributes represent a user ID
       ID_ATTRIBUTES: schacPersonalUniqueID,schacPersonalUniqueCode,eduPersonTargetedID,eduPersonPrincipalName
 ```
 
+Same as above, but to define and prioritise which attributes can be used to get 
+a name, a surname and a mail address respectively
+```yaml
+      NAME_ATTRIBUTES: FirstName,BirthName,givenName,displayName,cn
+      SURNAME_ATTRIBUTES: FamilyName,sn,displayName,cn
+      MAIL_ATTRIBUTES: mail
+```
+
 Now, run the docker-compose file
 ```shell script
 docker-compose up -d 
@@ -199,6 +207,12 @@ For the sake of completeness, we'll explain the configurations that the imported
 * Set the specific theme:
   - Go to `Realm Settings/Themes`
   - On the `Login Theme` drop-dowm, select `spms`
+* Make sure duplicated e-mails are accepted (*because
+ we have a fallback default email value in case no email attribute is received*)
+  - Go to `Realm Settings/Login`
+    - Set `Login with email` to `OFF`
+    - Set `Duplicate emails` to `ON`
+    - Click `Save`
 
 
 
